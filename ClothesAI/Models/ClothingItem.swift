@@ -1,0 +1,78 @@
+import Foundation
+import SwiftUI
+
+// 4-level category system for organizing clothing
+enum ClothingCategory: String, Codable, CaseIterable, Identifiable {
+    case headwear = "Headwear"
+    case tops = "Tops"
+    case bottoms = "Bottoms"
+    case footwear = "Footwear"
+    case outerwear = "Outerwear"
+    case accessories = "Accessories"
+
+    var id: String { rawValue }
+
+    var icon: String {
+        switch self {
+        case .headwear: return "🎩"
+        case .tops: return "👕"
+        case .bottoms: return "👖"
+        case .footwear: return "👟"
+        case .outerwear: return "🧥"
+        case .accessories: return "🎀"
+        }
+    }
+
+    var displayOrder: Int {
+        switch self {
+        case .headwear: return 0
+        case .outerwear: return 1
+        case .tops: return 2
+        case .bottoms: return 3
+        case .footwear: return 4
+        case .accessories: return 5
+        }
+    }
+}
+
+struct ClothingItem: Identifiable, Codable, Hashable {
+    let id: UUID
+    var name: String
+    var category: ClothingCategory
+    var imageData: Data
+    var dateAdded: Date
+    var tags: [String]
+    var isFavorite: Bool
+
+    init(id: UUID = UUID(), name: String, category: ClothingCategory, imageData: Data, dateAdded: Date = Date(), tags: [String] = [], isFavorite: Bool = false) {
+        self.id = id
+        self.name = name
+        self.category = category
+        self.imageData = imageData
+        self.dateAdded = dateAdded
+        self.tags = tags
+        self.isFavorite = isFavorite
+    }
+
+    var image: UIImage? {
+        UIImage(data: imageData)
+    }
+}
+
+struct Outfit: Identifiable, Codable {
+    let id: UUID
+    var name: String
+    var itemIds: [UUID]  // References to clothing items
+    var dateCreated: Date
+    var isFavorite: Bool
+    var notes: String
+
+    init(id: UUID = UUID(), name: String, itemIds: [UUID] = [], dateCreated: Date = Date(), isFavorite: Bool = false, notes: String = "") {
+        self.id = id
+        self.name = name
+        self.itemIds = itemIds
+        self.dateCreated = dateCreated
+        self.isFavorite = isFavorite
+        self.notes = notes
+    }
+}
