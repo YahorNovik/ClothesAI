@@ -30,7 +30,7 @@ struct WardrobeView: View {
             .navigationTitle("My Wardrobe")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .primaryAction) {
                     Button(action: addItemTapped) {
                         Image(systemName: "plus.circle.fill")
                             .font(.title2)
