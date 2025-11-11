@@ -15,7 +15,7 @@ enum ClothingCategory: String, Codable, CaseIterable, Identifiable {
     // SF Symbol icon name
     var iconName: String {
         switch self {
-        case .headwear: return "crown.fill"
+        case .headwear: return "baseball.cap.fill"
         case .tops: return "tshirt.fill"
         case .bottoms: return "figure.walk"
         case .footwear: return "shoe.fill"
