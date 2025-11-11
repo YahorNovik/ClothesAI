@@ -133,7 +133,8 @@ struct OutfitDetailView: View {
                                     }
 
                                     HStack {
-                                        Text(item.category.icon)
+                                        Image(systemName: item.category.iconName)
+                                            .foregroundColor(item.category.iconColor)
                                         Text(item.name)
                                             .font(.caption)
                                     }

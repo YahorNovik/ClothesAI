@@ -12,14 +12,27 @@ enum ClothingCategory: String, Codable, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    var icon: String {
+    // SF Symbol icon name
+    var iconName: String {
         switch self {
-        case .headwear: return "🎩"
-        case .tops: return "👕"
-        case .bottoms: return "👖"
-        case .footwear: return "👟"
-        case .outerwear: return "🧥"
-        case .accessories: return "🎀"
+        case .headwear: return "crown.fill"
+        case .tops: return "tshirt.fill"
+        case .bottoms: return "figure.walk"
+        case .footwear: return "shoe.fill"
+        case .outerwear: return "jacket.fill"
+        case .accessories: return "bag.fill"
+        }
+    }
+
+    // Color for the icon
+    var iconColor: Color {
+        switch self {
+        case .headwear: return .purple
+        case .tops: return .blue
+        case .bottoms: return .indigo
+        case .footwear: return .brown
+        case .outerwear: return .orange
+        case .accessories: return .pink
         }
     }
 

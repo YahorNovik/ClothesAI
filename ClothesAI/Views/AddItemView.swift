@@ -70,9 +70,11 @@ struct AddItemView: View {
 
                     Picker("Category", selection: $selectedCategory) {
                         ForEach(ClothingCategory.allCases) { category in
-                            HStack {
-                                Text(category.icon)
+                            Label {
                                 Text(category.rawValue)
+                            } icon: {
+                                Image(systemName: category.iconName)
+                                    .foregroundColor(category.iconColor)
                             }
                             .tag(category)
                         }

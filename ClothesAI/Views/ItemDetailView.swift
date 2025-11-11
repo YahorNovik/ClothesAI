@@ -28,7 +28,8 @@ struct ItemDetailView: View {
                                 .fontWeight(.bold)
 
                             HStack {
-                                Text(item.category.icon)
+                                Image(systemName: item.category.iconName)
+                                    .foregroundColor(item.category.iconColor)
                                 Text(item.category.rawValue)
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)

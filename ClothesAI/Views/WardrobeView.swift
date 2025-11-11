@@ -68,6 +68,7 @@ struct WardrobeView: View {
                 CategoryButton(
                     title: "All",
                     icon: "square.grid.2x2",
+                    iconColor: .gray,
                     isSelected: selectedCategory == nil,
                     count: wardrobeManager.totalItems
                 ) {
@@ -77,7 +78,8 @@ struct WardrobeView: View {
                 ForEach(ClothingCategory.allCases.sorted(by: { $0.displayOrder < $1.displayOrder })) { category in
                     CategoryButton(
                         title: category.rawValue,
-                        icon: category.icon,
+                        icon: category.iconName,
+                        iconColor: category.iconColor,
                         isSelected: selectedCategory == category,
                         count: wardrobeManager.items(for: category).count
                     ) {
@@ -122,6 +124,7 @@ struct WardrobeView: View {
 struct CategoryButton: View {
     let title: String
     let icon: String
+    let iconColor: Color
     let isSelected: Bool
     let count: Int
     let action: () -> Void
@@ -130,16 +133,10 @@ struct CategoryButton: View {
         Button(action: action) {
             VStack(spacing: 8) {
                 ZStack(alignment: .topTrailing) {
-                    if icon.count == 1 {
-                        // Emoji
-                        Text(icon)
-                            .font(.system(size: 32))
-                    } else {
-                        // SF Symbol
-                        Image(systemName: icon)
-                            .font(.system(size: 28))
-                            .foregroundColor(isSelected ? .white : .primary)
-                    }
+                    // SF Symbol
+                    Image(systemName: icon)
+                        .font(.system(size: 28))
+                        .foregroundColor(isSelected ? .white : iconColor)
 
                     if count > 0 {
                         Text("\(count)")
@@ -153,13 +150,13 @@ struct CategoryButton: View {
                     }
                 }
                 .frame(width: 60, height: 60)
-                .background(isSelected ? Color.blue : Color(.systemGray5))
+                .background(isSelected ? iconColor : Color(.systemGray5))
                 .clipShape(Circle())
 
                 Text(title)
                     .font(.caption)
                     .fontWeight(isSelected ? .semibold : .regular)
-                    .foregroundColor(isSelected ? .blue : .primary)
+                    .foregroundColor(isSelected ? iconColor : .primary)
             }
         }
     }
