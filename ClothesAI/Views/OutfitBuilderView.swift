@@ -4,7 +4,7 @@ struct OutfitBuilderView: View {
     @EnvironmentObject var wardrobeManager: WardrobeManager
     @EnvironmentObject var subscriptionManager: SubscriptionManager
 
-    @State private var selectedItems: [UUID: ClothingItem] = [:]
+    @State private var selectedItems: [ClothingCategory: ClothingItem] = [:]
     @State private var outfitName = ""
     @State private var showingSaveSheet = false
     @State private var showingLimitAlert = false
@@ -35,7 +35,7 @@ struct OutfitBuilderView: View {
                         CategorySection(
                             category: category,
                             items: wardrobeManager.items(for: category),
-                            selectedItem: selectedItems[category.rawValue.hashValue],
+                            selectedItem: selectedItems[category],
                             onSelect: { item in
                                 selectItem(item, for: category)
                             }
@@ -46,20 +46,7 @@ struct OutfitBuilderView: View {
             }
             .navigationTitle("Outfit Builder")
             .navigationBarTitleDisplayMode(.inline)
-            .navigationBarItems(
-                leading: Button("Clear") {
-                    selectedItems.removeAll()
-                }
-                .disabled(selectedItems.isEmpty),
-                trailing: Button("Save Look") {
-                    if subscriptionManager.canAddOutfit(currentCount: wardrobeManager.totalOutfits) {
-                        showingSaveSheet = true
-                    } else {
-                        showingLimitAlert = true
-                    }
-                }
-                .disabled(selectedItems.isEmpty)
-            )
+            .navigationBarItems(leading: clearButton, trailing: saveButton)
             .sheet(isPresented: $showingSaveSheet) {
                 SaveOutfitSheet(
                     outfitName: $outfitName,
@@ -81,6 +68,24 @@ struct OutfitBuilderView: View {
                 Text("Your outfit '\(outfitName)' has been saved successfully!")
             }
         }
+    }
+
+    private var clearButton: some View {
+        Button("Clear") {
+            selectedItems.removeAll()
+        }
+        .disabled(selectedItems.isEmpty)
+    }
+
+    private var saveButton: some View {
+        Button("Save Look") {
+            if subscriptionManager.canAddOutfit(currentCount: wardrobeManager.totalOutfits) {
+                showingSaveSheet = true
+            } else {
+                showingLimitAlert = true
+            }
+        }
+        .disabled(selectedItems.isEmpty)
     }
 
     private var outfitPreview: some View {
@@ -128,11 +133,10 @@ struct OutfitBuilderView: View {
     }
 
     private func selectItem(_ item: ClothingItem, for category: ClothingCategory) {
-        let key = category.rawValue.hashValue
-        if selectedItems[key]?.id == item.id {
-            selectedItems.removeValue(forKey: key)
+        if selectedItems[category]?.id == item.id {
+            selectedItems.removeValue(forKey: category)
         } else {
-            selectedItems[key] = item
+            selectedItems[category] = item
         }
     }
 
