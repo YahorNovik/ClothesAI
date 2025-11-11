@@ -89,13 +89,13 @@ struct AddItemView: View {
             }
             .navigationTitle("Add Item")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
+            .toolbar(content: {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
                         dismiss()
                     }
                 }
-            }
+            })
             .sheet(isPresented: $showingCamera) {
                 ImagePicker(image: $capturedImage, isPresented: $showingCamera, sourceType: .camera)
             }

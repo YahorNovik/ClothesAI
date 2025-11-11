@@ -46,7 +46,7 @@ struct OutfitBuilderView: View {
             }
             .navigationTitle("Outfit Builder")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
+            .toolbar(content: {
                 ToolbarItem(placement: .primaryAction) {
                     Button("Save Look") {
                         if subscriptionManager.canAddOutfit(currentCount: wardrobeManager.totalOutfits) {
@@ -64,7 +64,7 @@ struct OutfitBuilderView: View {
                     }
                     .disabled(selectedItems.isEmpty)
                 }
-            }
+            })
             .sheet(isPresented: $showingSaveSheet) {
                 SaveOutfitSheet(
                     outfitName: $outfitName,
@@ -263,13 +263,13 @@ struct SaveOutfitSheet: View {
             }
             .navigationTitle("Save Look")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
+            .toolbar(content: {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
                         dismiss()
                     }
                 }
-            }
+            })
         }
     }
 }
