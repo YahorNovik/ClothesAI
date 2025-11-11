@@ -202,12 +202,8 @@ struct OutfitDetailView: View {
             }
             .navigationTitle("Outfit Details")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar(content: {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
+            .navigationBarItems(trailing: Button("Done") {
+                dismiss()
             })
             .alert("Delete Look", isPresented: $showingDeleteAlert) {
                 Button("Cancel", role: .cancel) {}

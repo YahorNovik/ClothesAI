@@ -46,25 +46,20 @@ struct OutfitBuilderView: View {
             }
             .navigationTitle("Outfit Builder")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar(content: {
-                ToolbarItem(placement: .primaryAction) {
-                    Button("Save Look") {
-                        if subscriptionManager.canAddOutfit(currentCount: wardrobeManager.totalOutfits) {
-                            showingSaveSheet = true
-                        } else {
-                            showingLimitAlert = true
-                        }
-                    }
-                    .disabled(selectedItems.isEmpty)
+            .navigationBarItems(
+                leading: Button("Clear") {
+                    selectedItems.removeAll()
                 }
-
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Clear") {
-                        selectedItems.removeAll()
+                .disabled(selectedItems.isEmpty),
+                trailing: Button("Save Look") {
+                    if subscriptionManager.canAddOutfit(currentCount: wardrobeManager.totalOutfits) {
+                        showingSaveSheet = true
+                    } else {
+                        showingLimitAlert = true
                     }
-                    .disabled(selectedItems.isEmpty)
                 }
-            })
+                .disabled(selectedItems.isEmpty)
+            )
             .sheet(isPresented: $showingSaveSheet) {
                 SaveOutfitSheet(
                     outfitName: $outfitName,
@@ -263,12 +258,8 @@ struct SaveOutfitSheet: View {
             }
             .navigationTitle("Save Look")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar(content: {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
+            .navigationBarItems(leading: Button("Cancel") {
+                dismiss()
             })
         }
     }

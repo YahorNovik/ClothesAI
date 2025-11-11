@@ -29,13 +29,9 @@ struct WardrobeView: View {
             }
             .navigationTitle("My Wardrobe")
             .navigationBarTitleDisplayMode(.large)
-            .toolbar(content: {
-                ToolbarItem(placement: .primaryAction) {
-                    Button(action: addItemTapped) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title2)
-                    }
-                }
+            .navigationBarItems(trailing: Button(action: addItemTapped) {
+                Image(systemName: "plus.circle.fill")
+                    .font(.title2)
             })
             .sheet(isPresented: $showingAddItem) {
                 AddItemView()
