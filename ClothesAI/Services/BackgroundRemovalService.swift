@@ -2,13 +2,33 @@ import UIKit
 import CoreImage
 import Vision
 
+enum BackgroundRemovalMethod {
+    case vision      // Apple Vision Framework (on-device, free)
+    case api         // WithoutBG API (server-based, better quality)
+}
+
 class BackgroundRemovalService {
     static let shared = BackgroundRemovalService()
+
+    // Configuration - change this to switch between methods
+    var method: BackgroundRemovalMethod = .vision
+    var apiBaseURL: String = "http://localhost:8000" // Change to your server URL
 
     private init() {}
 
     /// Removes the background from an image and replaces it with white
     func removeBackground(from image: UIImage, completion: @escaping (UIImage?) -> Void) {
+        switch method {
+        case .vision:
+            removeBackgroundVision(from: image, completion: completion)
+        case .api:
+            removeBackgroundAPI(from: image, completion: completion)
+        }
+    }
+
+    // MARK: - Vision Framework Method
+
+    private func removeBackgroundVision(from image: UIImage, completion: @escaping (UIImage?) -> Void) {
         guard let cgImage = image.cgImage else {
             completion(nil)
             return
@@ -113,5 +133,75 @@ class BackgroundRemovalService {
         image.draw(at: .zero)
 
         return UIGraphicsGetImageFromCurrentImageContext()
+    }
+
+    // MARK: - API Method (WithoutBG)
+
+    private func removeBackgroundAPI(from image: UIImage, completion: @escaping (UIImage?) -> Void) {
+        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+            print("Failed to convert image to JPEG data")
+            completion(nil)
+            return
+        }
+
+        let url = URL(string: "\(apiBaseURL)/remove-background")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+
+        let boundary = UUID().uuidString
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+
+        var body = Data()
+
+        // Add image data
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"image.jpg\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+        body.append(imageData)
+        body.append("\r\n".data(using: .utf8)!)
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+
+        request.httpBody = body
+
+        print("Sending image to API: \(url)")
+
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    print("API Error: \(error.localizedDescription)")
+                    completion(nil)
+                    return
+                }
+
+                guard let data = data else {
+                    print("No data received from API")
+                    completion(nil)
+                    return
+                }
+
+                if let httpResponse = response as? HTTPURLResponse {
+                    print("API Response status: \(httpResponse.statusCode)")
+
+                    if httpResponse.statusCode != 200 {
+                        if let errorString = String(data: data, encoding: .utf8) {
+                            print("API Error response: \(errorString)")
+                        }
+                        completion(nil)
+                        return
+                    }
+                }
+
+                guard let resultImage = UIImage(data: data) else {
+                    print("Failed to create image from API response")
+                    completion(nil)
+                    return
+                }
+
+                print("Successfully received processed image from API")
+                completion(resultImage)
+            }
+        }
+
+        task.resume()
     }
 }
