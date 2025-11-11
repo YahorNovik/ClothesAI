@@ -28,8 +28,12 @@ struct ItemDetailView: View {
                                 .fontWeight(.bold)
 
                             HStack {
-                                Image(systemName: item.category.iconName)
-                                    .foregroundColor(item.category.iconColor)
+                                if item.category.isEmojiIcon {
+                                    Text(item.category.iconName)
+                                } else {
+                                    Image(systemName: item.category.iconName)
+                                        .foregroundColor(item.category.iconColor)
+                                }
                                 Text(item.category.rawValue)
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)

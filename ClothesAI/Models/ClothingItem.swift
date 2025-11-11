@@ -12,15 +12,23 @@ enum ClothingCategory: String, Codable, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    // SF Symbol icon name
+    // Icon (SF Symbol name or emoji)
     var iconName: String {
         switch self {
         case .headwear: return "baseball.cap.fill"
         case .tops: return "tshirt.fill"
-        case .bottoms: return "figure.walk"
+        case .bottoms: return "👖"
         case .footwear: return "shoe.fill"
         case .outerwear: return "jacket.fill"
         case .accessories: return "bag.fill"
+        }
+    }
+
+    // Check if icon is emoji (not SF Symbol)
+    var isEmojiIcon: Bool {
+        switch self {
+        case .bottoms: return true
+        default: return false
         }
     }
 

@@ -117,9 +117,14 @@ struct OutfitBuilderView: View {
                                         .frame(width: 100, height: 100)
                                         .cornerRadius(12)
 
-                                    Image(systemName: item.category.iconName)
-                                        .font(.caption)
-                                        .foregroundColor(item.category.iconColor)
+                                    if item.category.isEmojiIcon {
+                                        Text(item.category.iconName)
+                                            .font(.caption)
+                                    } else {
+                                        Image(systemName: item.category.iconName)
+                                            .font(.caption)
+                                            .foregroundColor(item.category.iconColor)
+                                    }
                                 }
                             }
                         }
@@ -163,8 +168,12 @@ struct CategorySection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Image(systemName: category.iconName)
-                    .foregroundColor(category.iconColor)
+                if category.isEmojiIcon {
+                    Text(category.iconName)
+                } else {
+                    Image(systemName: category.iconName)
+                        .foregroundColor(category.iconColor)
+                }
                 Text(category.rawValue)
                     .font(.headline)
                 Spacer()
@@ -249,8 +258,12 @@ struct SaveOutfitSheet: View {
                             }
                             Text(item.name)
                             Spacer()
-                            Image(systemName: item.category.iconName)
-                                .foregroundColor(item.category.iconColor)
+                            if item.category.isEmojiIcon {
+                                Text(item.category.iconName)
+                            } else {
+                                Image(systemName: item.category.iconName)
+                                    .foregroundColor(item.category.iconColor)
+                            }
                         }
                     }
                 }

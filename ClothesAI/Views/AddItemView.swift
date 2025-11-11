@@ -70,13 +70,22 @@ struct AddItemView: View {
 
                     Picker("Category", selection: $selectedCategory) {
                         ForEach(ClothingCategory.allCases) { category in
-                            Label {
-                                Text(category.rawValue)
-                            } icon: {
-                                Image(systemName: category.iconName)
-                                    .foregroundColor(category.iconColor)
+                            if category.isEmojiIcon {
+                                Label {
+                                    Text(category.rawValue)
+                                } icon: {
+                                    Text(category.iconName)
+                                }
+                                .tag(category)
+                            } else {
+                                Label {
+                                    Text(category.rawValue)
+                                } icon: {
+                                    Image(systemName: category.iconName)
+                                        .foregroundColor(category.iconColor)
+                                }
+                                .tag(category)
                             }
-                            .tag(category)
                         }
                     }
                 }

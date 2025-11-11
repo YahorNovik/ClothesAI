@@ -70,7 +70,8 @@ struct WardrobeView: View {
                     icon: "square.grid.2x2",
                     iconColor: .gray,
                     isSelected: selectedCategory == nil,
-                    count: wardrobeManager.totalItems
+                    count: wardrobeManager.totalItems,
+                    isEmoji: false
                 ) {
                     selectedCategory = nil
                 }
@@ -81,7 +82,8 @@ struct WardrobeView: View {
                         icon: category.iconName,
                         iconColor: category.iconColor,
                         isSelected: selectedCategory == category,
-                        count: wardrobeManager.items(for: category).count
+                        count: wardrobeManager.items(for: category).count,
+                        isEmoji: category.isEmojiIcon
                     ) {
                         selectedCategory = category
                     }
@@ -127,16 +129,23 @@ struct CategoryButton: View {
     let iconColor: Color
     let isSelected: Bool
     let count: Int
+    let isEmoji: Bool
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             VStack(spacing: 8) {
                 ZStack(alignment: .topTrailing) {
-                    // SF Symbol
-                    Image(systemName: icon)
-                        .font(.system(size: 28))
-                        .foregroundColor(isSelected ? .white : iconColor)
+                    if isEmoji {
+                        // Emoji
+                        Text(icon)
+                            .font(.system(size: 32))
+                    } else {
+                        // SF Symbol
+                        Image(systemName: icon)
+                            .font(.system(size: 28))
+                            .foregroundColor(isSelected ? .white : iconColor)
+                    }
 
                     if count > 0 {
                         Text("\(count)")
