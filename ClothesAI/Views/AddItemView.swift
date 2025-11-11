@@ -107,7 +107,7 @@ struct AddItemView: View {
                 }
                 Button("Cancel", role: .cancel) {}
             }
-            .onChange(of: capturedImage) { _, newImage in
+            .onChange(of: capturedImage) { newImage in
                 if let image = newImage {
                     processImage(image)
                 }
