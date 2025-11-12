@@ -12,7 +12,12 @@ class BackgroundRemovalService {
 
     // Configuration - change this to switch between methods
     var method: BackgroundRemovalMethod = .vision
-    var apiBaseURL: String = "http://localhost:8000" // Change to your server URL
+
+    // Server URL Configuration
+    // For iOS Simulator: use "http://localhost:8000"
+    // For Physical Device: use your Mac's IP, e.g., "http://192.168.1.100:8000"
+    // To find your Mac's IP: Run 'ipconfig getifaddr en0' in Terminal
+    var apiBaseURL: String = "http://localhost:8000"
 
     private init() {}
 
@@ -168,7 +173,13 @@ class BackgroundRemovalService {
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
                 if let error = error {
-                    print("API Error: \(error.localizedDescription)")
+                    print("❌ API Connection Error: \(error.localizedDescription)")
+                    print("📍 Server URL: \(self.apiBaseURL)")
+                    print("💡 Troubleshooting:")
+                    print("   • Make sure backend server is running: python backend/main.py")
+                    print("   • For iOS Simulator: use http://localhost:8000")
+                    print("   • For Physical Device: use your Mac's IP (e.g., http://192.168.1.100:8000)")
+                    print("   • Check that both devices are on the same WiFi network")
                     completion(nil)
                     return
                 }
