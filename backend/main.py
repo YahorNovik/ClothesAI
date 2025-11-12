@@ -33,16 +33,8 @@ except ImportError:
 
 def remove_bg_withoutbg(image: Image.Image) -> Image.Image:
     """Remove background using WithoutBG library."""
-    # Convert image to bytes
-    img_byte_arr = io.BytesIO()
-    image.save(img_byte_arr, format='PNG')
-    img_byte_arr.seek(0)
-
-    # Process with WithoutBG
-    result = remove_background(img_byte_arr.read())
-
-    # Convert result back to PIL Image
-    result_image = Image.open(io.BytesIO(result))
+    # Process with WithoutBG - it accepts PIL Image directly
+    result_image = remove_background(image)
 
     # Create white background
     white_bg = Image.new('RGB', result_image.size, (255, 255, 255))
