@@ -1,6 +1,9 @@
 # ClothesAI Background Removal Backend
 
-Local backend server for removing backgrounds from clothing photos using WithoutBG.
+Local backend server for removing backgrounds from clothing photos using multiple AI models:
+- **Rembg** (Recommended) - Multiple models including clothing-specific segmentation
+- **WithoutBG** - High-quality background removal
+- **Fallback** - Simple white background (no AI processing)
 
 ## Setup
 
@@ -29,20 +32,40 @@ The server will start on `http://localhost:8000`
 
 ### `POST /remove-background`
 
-Remove background from an image.
+Remove background from an image with customizable methods and models.
 
 **Request:**
 - Method: `POST`
 - Content-Type: `multipart/form-data`
 - Body: `file` (image file)
-- Query params: `format` (optional, default: "png")
+- Query params:
+  - `method` (optional, default: "rembg") - Options: `rembg`, `withoutbg`, `fallback`
+  - `model` (optional, default: "u2net_cloth_seg") - Only for rembg method
+  - `format` (optional, default: "png") - Options: `png`, `jpeg`
+
+**Available Rembg Models:**
+- `u2net_cloth_seg` - **Best for clothing** (default)
+- `u2net` - General purpose
+- `isnet-general-use` - High quality general purpose
+- `silueta` - Fast & lightweight (43MB)
 
 **Example using curl:**
 
 ```bash
-curl -X POST "http://localhost:8000/remove-background" \
+# Using rembg with clothing-specific model (default)
+curl -X POST "http://localhost:8000/remove-background?method=rembg&model=u2net_cloth_seg" \
   -F "file=@/path/to/image.jpg" \
   --output result.png
+
+# Using WithoutBG
+curl -X POST "http://localhost:8000/remove-background?method=withoutbg" \
+  -F "file=@/path/to/image.jpg" \
+  --output result.png
+
+# Compare different models
+curl -X POST "http://localhost:8000/remove-background?method=rembg&model=u2net" \
+  -F "file=@shirt.jpg" \
+  --output result_u2net.png
 ```
 
 **Response:**
@@ -58,7 +81,17 @@ Health check endpoint.
 {
   "status": "ok",
   "service": "ClothesAI Background Removal API",
-  "withoutbg_available": true
+  "methods": {
+    "rembg": true,
+    "withoutbg": true,
+    "fallback": true
+  },
+  "rembg_models": {
+    "u2net": "General purpose (default)",
+    "u2net_cloth_seg": "Clothing segmentation (best for clothes)",
+    "isnet-general-use": "High quality general purpose",
+    "silueta": "Fast & lightweight (43MB)"
+  }
 }
 ```
 
@@ -70,8 +103,15 @@ Detailed health check.
 ```json
 {
   "status": "healthy",
-  "withoutbg_available": true,
-  "version": "1.0.0"
+  "version": "2.0.0",
+  "methods": {
+    "rembg": true,
+    "withoutbg": true,
+    "fallback": true
+  },
+  "rembg_models": {...},
+  "default_method": "rembg",
+  "default_model": "u2net_cloth_seg"
 }
 ```
 
@@ -88,9 +128,13 @@ open test.html  # macOS
 ```
 
 The web interface will automatically check the server connection and allow you to:
+- **Choose between methods**: Rembg, WithoutBG, or Fallback
+- **Select models**: For rembg, choose from 4 different models
 - Upload and process images
 - See before/after comparison
 - Download the result
+
+**Tip:** Try different models on the same image to compare results!
 
 ### Test from command line:
 
@@ -106,14 +150,40 @@ curl -X POST "http://localhost:8000/remove-background" \
 ```python
 import requests
 
-url = "http://localhost:8000/remove-background"
-files = {"file": open("test_image.jpg", "rb")}
+# Using rembg with clothing-specific model (recommended for clothes)
+url = "http://localhost:8000/remove-background?method=rembg&model=u2net_cloth_seg"
+files = {"file": open("shirt.jpg", "rb")}
 
 response = requests.post(url, files=files)
 
 with open("result.png", "wb") as f:
     f.write(response.content)
 ```
+
+### Compare Models:
+
+Test the same image with different models to find the best one:
+
+```bash
+# Test all rembg models on the same image
+for model in u2net_cloth_seg u2net isnet-general-use silueta; do
+  curl -X POST "http://localhost:8000/remove-background?method=rembg&model=$model" \
+    -F "file=@shirt.jpg" \
+    --output "result_${model}.png"
+  echo "Processed with $model"
+done
+
+# Compare with WithoutBG
+curl -X POST "http://localhost:8000/remove-background?method=withoutbg" \
+  -F "file=@shirt.jpg" \
+  --output result_withoutbg.png
+```
+
+**Which model to use?**
+- **u2net_cloth_seg**: Best for clothing items (shirts, pants, dresses)
+- **isnet-general-use**: Best overall quality, but slower
+- **silueta**: Fastest processing, good for simple backgrounds
+- **u2net**: Good general purpose fallback
 
 ## iOS App Configuration
 
@@ -145,8 +215,30 @@ Deploy as a Docker container or directly on a VM.
 
 ## Troubleshooting
 
+### Rembg not installing?
+If you have issues installing rembg:
+```bash
+# Try installing with specific version
+pip install "rembg>=2.0.50"
+
+# Or install without optional dependencies
+pip install rembg --no-deps
+pip install onnxruntime pillow numpy
+```
+
+The server will automatically fall back to WithoutBG or the fallback method if rembg is not available.
+
 ### WithoutBG not installing?
-The server will fall back to a simple white background method if WithoutBG is not available.
+The server will fall back to rembg or the simple fallback method if WithoutBG is not available.
+
+### First run is slow?
+Rembg downloads model files on first use. This is normal:
+- **u2net_cloth_seg**: ~65MB download
+- **u2net**: ~176MB download
+- **isnet-general-use**: ~175MB download
+- **silueta**: ~43MB download
+
+Models are cached in `~/.u2net/` and won't be downloaded again.
 
 ### Port already in use?
 Change the port in `main.py`:

@@ -33,6 +33,33 @@
             border-radius: 5px;
             width: 100%;
         }
+        select {
+            display: block;
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            width: 100%;
+            font-size: 14px;
+            background: white;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+        }
+        .settings-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
         button {
             background: #007AFF;
             color: white;
@@ -129,10 +156,33 @@
             <strong>Instructions:</strong>
             <ol>
                 <li>Make sure the backend server is running on <code>http://localhost:8000</code></li>
+                <li>Choose a method and model below</li>
                 <li>Select an image of clothing</li>
-                <li>Click "Remove Background"</li>
-                <li>Compare the original and processed images</li>
+                <li>Click "Remove Background" and compare results</li>
             </ol>
+        </div>
+
+        <div class="settings-section">
+            <h3 style="margin-top: 0;">⚙️ Settings</h3>
+            <div class="settings-grid">
+                <div>
+                    <label for="methodSelect">Method:</label>
+                    <select id="methodSelect" onchange="updateModelOptions()">
+                        <option value="rembg">Rembg (Recommended)</option>
+                        <option value="withoutbg">WithoutBG</option>
+                        <option value="fallback">Fallback (No removal)</option>
+                    </select>
+                </div>
+                <div id="modelSelectContainer">
+                    <label for="modelSelect">Model:</label>
+                    <select id="modelSelect">
+                        <option value="u2net_cloth_seg">Cloth Segmentation (Best for clothes)</option>
+                        <option value="u2net">U2Net (General purpose)</option>
+                        <option value="isnet-general-use">ISNet (High quality)</option>
+                        <option value="silueta">Silueta (Fast & lightweight)</option>
+                    </select>
+                </div>
+            </div>
         </div>
 
         <div class="upload-section">
@@ -161,6 +211,7 @@
     <script>
         const API_URL = 'http://localhost:8000';
         let selectedFile = null;
+        let serverConfig = null;
 
         document.getElementById('imageInput').addEventListener('change', function(e) {
             selectedFile = e.target.files[0];
@@ -177,15 +228,29 @@
             }
         });
 
+        function updateModelOptions() {
+            const method = document.getElementById('methodSelect').value;
+            const modelContainer = document.getElementById('modelSelectContainer');
+
+            if (method === 'rembg') {
+                modelContainer.style.display = 'block';
+            } else {
+                modelContainer.style.display = 'none';
+            }
+        }
+
         async function processImage() {
             if (!selectedFile) {
                 showStatus('Please select an image first', 'error');
                 return;
             }
 
+            const method = document.getElementById('methodSelect').value;
+            const model = document.getElementById('modelSelect').value;
+
             const processButton = document.getElementById('processButton');
             processButton.disabled = true;
-            showStatus('<div class="spinner"></div> Processing image...', 'processing');
+            showStatus(`<div class="spinner"></div> Processing with ${method}${method === 'rembg' ? ` (${model})` : ''}...`, 'processing');
 
             try {
                 // Check server health first
@@ -198,7 +263,13 @@
                 const formData = new FormData();
                 formData.append('file', selectedFile);
 
-                const response = await fetch(`${API_URL}/remove-background`, {
+                // Build URL with query parameters
+                let url = `${API_URL}/remove-background?method=${method}`;
+                if (method === 'rembg') {
+                    url += `&model=${model}`;
+                }
+
+                const response = await fetch(url, {
                     method: 'POST',
                     body: formData
                 });
@@ -237,8 +308,26 @@
             try {
                 const response = await fetch(`${API_URL}/health`);
                 const data = await response.json();
+                serverConfig = data;
                 console.log('Server status:', data);
-                showStatus(`✓ Server is running. WithoutBG available: ${data.withoutbg_available}`, 'success');
+
+                const methods = [];
+                if (data.methods.rembg) methods.push('Rembg');
+                if (data.methods.withoutbg) methods.push('WithoutBG');
+                methods.push('Fallback');
+
+                showStatus(`✓ Server is running. Available methods: ${methods.join(', ')}. Default: ${data.default_method} (${data.default_model || 'N/A'})`, 'success');
+
+                // Update UI based on available methods
+                const methodSelect = document.getElementById('methodSelect');
+                if (!data.methods.rembg) {
+                    methodSelect.querySelector('option[value="rembg"]').disabled = true;
+                    methodSelect.querySelector('option[value="rembg"]').text += ' (Not installed)';
+                }
+                if (!data.methods.withoutbg) {
+                    methodSelect.querySelector('option[value="withoutbg"]').disabled = true;
+                    methodSelect.querySelector('option[value="withoutbg"]').text += ' (Not installed)';
+                }
             } catch (error) {
                 showStatus('✗ Cannot connect to server. Make sure it\'s running on http://localhost:8000', 'error');
             }
