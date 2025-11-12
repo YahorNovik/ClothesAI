@@ -77,6 +77,21 @@ Detailed health check.
 
 ## Testing the API
 
+### Web Interface
+
+Open `test.html` in your browser to test the API with a visual interface:
+
+```bash
+# Simply open the file in your browser
+open test.html  # macOS
+# Or double-click test.html in Finder
+```
+
+The web interface will automatically check the server connection and allow you to:
+- Upload and process images
+- See before/after comparison
+- Download the result
+
 ### Test from command line:
 
 ```bash
@@ -140,14 +155,6 @@ uvicorn.run(app, host="0.0.0.0", port=8001)  # Use different port
 ```
 
 ### CORS issues?
-Add CORS middleware if needed:
-```python
-from fastapi.middleware.cors import CORSMiddleware
+CORS is enabled by default to allow the web interface to work when opened as a file.
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-```
+**Note:** In production, you should restrict `allow_origins` to specific domains instead of `["*"]`.
