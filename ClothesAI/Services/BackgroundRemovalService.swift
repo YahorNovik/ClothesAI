@@ -11,7 +11,7 @@ class BackgroundRemovalService {
     static let shared = BackgroundRemovalService()
 
     // Configuration - change this to switch between methods
-    var method: BackgroundRemovalMethod = .vision
+    var method: BackgroundRemovalMethod = .api  // Using API (WithoutBG) for best quality
 
     // Server URL Configuration
     // For iOS Simulator: use "http://localhost:8000"
