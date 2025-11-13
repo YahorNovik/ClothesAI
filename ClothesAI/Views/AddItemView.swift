@@ -5,7 +5,6 @@ struct AddItemView: View {
     @EnvironmentObject var wardrobeManager: WardrobeManager
     @StateObject private var cameraService = CameraService()
 
-    @State private var itemName = ""
     @State private var selectedCategory: ClothingCategory = .tops
     @State private var capturedImage: UIImage?
     @State private var processedImage: UIImage?
@@ -13,6 +12,7 @@ struct AddItemView: View {
     @State private var showingCamera = false
     @State private var isProcessing = false
     @State private var showingSourceSelection = false
+    @State private var processingError: String?
 
     var body: some View {
         NavigationView {
@@ -60,15 +60,26 @@ struct AddItemView: View {
                                 Text("Background removed")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
+                            } else if let error = processingError {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundColor(.orange)
+                                Text(error)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
                             }
                         }
                     }
+
+                    if let error = processingError {
+                        Text("Note: Using original image. Make sure backend server is running on \(BackgroundRemovalService.shared.apiBaseURL)")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                            .padding(.vertical, 4)
+                    }
                 }
 
-                Section("Details") {
-                    TextField("Item Name", text: $itemName)
-
-                    Picker("Category", selection: $selectedCategory) {
+                Section("Category") {
+                    Picker("Select Category", selection: $selectedCategory) {
                         ForEach(ClothingCategory.allCases) { category in
                             if category.isEmojiIcon {
                                 Label {
@@ -127,19 +138,24 @@ struct AddItemView: View {
     }
 
     private var canSave: Bool {
-        !itemName.isEmpty && processedImage != nil && !isProcessing
+        processedImage != nil && !isProcessing
     }
 
     private func processImage(_ image: UIImage) {
         isProcessing = true
+        processingError = nil
+
         BackgroundRemovalService.shared.removeBackground(from: image) { result in
             DispatchQueue.main.async {
                 isProcessing = false
                 if let processedImage = result {
                     self.processedImage = processedImage
+                    self.processingError = nil
                 } else {
-                    // Fallback if background removal fails
+                    // Fallback if background removal fails - use original image
                     self.processedImage = image
+                    self.processingError = "Server unavailable"
+                    print("⚠️ Background removal failed - using original image")
                 }
             }
         }
@@ -151,8 +167,13 @@ struct AddItemView: View {
             return
         }
 
+        // Auto-generate name based on category and count
+        let categoryItems = wardrobeManager.items(for: selectedCategory)
+        let itemNumber = categoryItems.count + 1
+        let autoName = "\(selectedCategory.rawValue) #\(itemNumber)"
+
         let newItem = ClothingItem(
-            name: itemName,
+            name: autoName,
             category: selectedCategory,
             imageData: imageData
         )
