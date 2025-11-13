@@ -11,7 +11,7 @@ struct ContentView: View {
                     Label("Wardrobe", systemImage: "tshirt.fill")
                 }
 
-            OutfitBuilderView()
+            EnhancedOutfitBuilderView()
                 .tabItem {
                     Label("Create Look", systemImage: "sparkles")
                 }
