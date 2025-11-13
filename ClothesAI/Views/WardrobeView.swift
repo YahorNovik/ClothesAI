@@ -6,7 +6,6 @@ struct WardrobeView: View {
     @State private var selectedCategory: ClothingCategory?
     @State private var showingAddItem = false
     @State private var showingLimitAlert = false
-    @State private var showingDebugMenu = false
 
     private let columns = [
         GridItem(.flexible()),
@@ -30,16 +29,10 @@ struct WardrobeView: View {
             }
             .navigationTitle("My Wardrobe")
             .navigationBarTitleDisplayMode(.large)
-            .navigationBarItems(
-                leading: Button(action: { showingDebugMenu = true }) {
-                    Image(systemName: "wrench.and.screwdriver")
-                        .font(.title3)
-                },
-                trailing: Button(action: addItemTapped) {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.title2)
-                }
-            )
+            .navigationBarItems(trailing: Button(action: addItemTapped) {
+                Image(systemName: "plus.circle.fill")
+                    .font(.title2)
+            })
             .sheet(isPresented: $showingAddItem) {
                 AddItemView()
             }
@@ -50,17 +43,6 @@ struct WardrobeView: View {
                 }
             } message: {
                 Text("You've reached the maximum number of items for your \(subscriptionManager.currentTier.displayName) plan. Upgrade to add more items!")
-            }
-            .confirmationDialog("Debug Menu", isPresented: $showingDebugMenu) {
-                Button("Add Mock Items (8 items)") {
-                    wardrobeManager.addMockItems()
-                }
-                Button("Clear All Data", role: .destructive) {
-                    wardrobeManager.clearAllData()
-                }
-                Button("Cancel", role: .cancel) {}
-            } message: {
-                Text("Testing & Development Tools")
             }
         }
     }
