@@ -168,8 +168,8 @@
                 <div>
                     <label for="methodSelect">Method:</label>
                     <select id="methodSelect" onchange="updateModelOptions()">
-                        <option value="rembg">Rembg (Recommended)</option>
-                        <option value="withoutbg">WithoutBG</option>
+                        <option value="withoutbg" selected>WithoutBG (Recommended)</option>
+                        <option value="rembg">Rembg</option>
                         <option value="fallback">Fallback (No removal)</option>
                     </select>
                 </div>
@@ -238,6 +238,9 @@
                 modelContainer.style.display = 'none';
             }
         }
+
+        // Initialize model selector visibility on page load
+        updateModelOptions();
 
         async function processImage() {
             if (!selectedFile) {

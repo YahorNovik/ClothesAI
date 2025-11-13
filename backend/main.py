@@ -117,7 +117,7 @@ async def root():
 @app.post("/remove-background")
 async def remove_background_endpoint(
     file: UploadFile = File(...),
-    method: str = "rembg",
+    method: str = "withoutbg",
     model: str = "isnet-general-use",
     format: str = "png"
 ):
@@ -126,7 +126,7 @@ async def remove_background_endpoint(
 
     Args:
         file: Image file to process
-        method: Background removal method (rembg, withoutbg, fallback), default: rembg
+        method: Background removal method (rembg, withoutbg, fallback), default: withoutbg
         model: Model to use (only for rembg method), default: isnet-general-use
         format: Output format (png or jpeg), default: png
 
@@ -195,7 +195,7 @@ async def health_check():
             "fallback": True
         },
         "rembg_models": REMBG_MODELS if REMBG_AVAILABLE else {},
-        "default_method": "rembg" if REMBG_AVAILABLE else ("withoutbg" if WITHOUTBG_AVAILABLE else "fallback"),
+        "default_method": "withoutbg" if WITHOUTBG_AVAILABLE else ("rembg" if REMBG_AVAILABLE else "fallback"),
         "default_model": "isnet-general-use"
     }
 

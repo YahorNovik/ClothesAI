@@ -1,8 +1,8 @@
 # ClothesAI Background Removal Backend
 
 Local backend server for removing backgrounds from clothing photos using multiple AI models:
-- **Rembg** (Recommended) - Multiple models including clothing-specific segmentation
-- **WithoutBG** - High-quality background removal
+- **WithoutBG** (Recommended) - High-quality background removal with excellent results
+- **Rembg** - Multiple models including clothing-specific segmentation
 - **Fallback** - Simple white background (no AI processing)
 
 ## Setup
@@ -39,12 +39,12 @@ Remove background from an image with customizable methods and models.
 - Content-Type: `multipart/form-data`
 - Body: `file` (image file)
 - Query params:
-  - `method` (optional, default: "rembg") - Options: `rembg`, `withoutbg`, `fallback`
+  - `method` (optional, default: "withoutbg") - Options: `withoutbg`, `rembg`, `fallback`
   - `model` (optional, default: "isnet-general-use") - Only for rembg method
   - `format` (optional, default: "png") - Options: `png`, `jpeg`
 
 **Available Rembg Models:**
-- `isnet-general-use` - **High quality general purpose** (default)
+- `isnet-general-use` - High quality general purpose
 - `u2net_cloth_seg` - Best for clothing segmentation
 - `u2net` - General purpose
 - `silueta` - Fast & lightweight (43MB)
@@ -52,13 +52,18 @@ Remove background from an image with customizable methods and models.
 **Example using curl:**
 
 ```bash
-# Using rembg with ISNet (default - high quality)
-curl -X POST "http://localhost:8000/remove-background?method=rembg&model=isnet-general-use" \
+# Using WithoutBG (default - best quality)
+curl -X POST "http://localhost:8000/remove-background" \
   -F "file=@/path/to/image.jpg" \
   --output result.png
 
-# Using WithoutBG
+# Or explicitly specify WithoutBG
 curl -X POST "http://localhost:8000/remove-background?method=withoutbg" \
+  -F "file=@/path/to/image.jpg" \
+  --output result.png
+
+# Using rembg with ISNet model
+curl -X POST "http://localhost:8000/remove-background?method=rembg&model=isnet-general-use" \
   -F "file=@/path/to/image.jpg" \
   --output result.png
 
@@ -110,8 +115,8 @@ Detailed health check.
     "fallback": true
   },
   "rembg_models": {...},
-  "default_method": "rembg",
-  "default_model": "u2net_cloth_seg"
+  "default_method": "withoutbg",
+  "default_model": "isnet-general-use"
 }
 ```
 
@@ -150,14 +155,21 @@ curl -X POST "http://localhost:8000/remove-background" \
 ```python
 import requests
 
-# Using rembg with ISNet (default - high quality)
-url = "http://localhost:8000/remove-background?method=rembg&model=isnet-general-use"
+# Using WithoutBG (default - best quality)
+url = "http://localhost:8000/remove-background"
 files = {"file": open("shirt.jpg", "rb")}
 
 response = requests.post(url, files=files)
 
 with open("result.png", "wb") as f:
     f.write(response.content)
+
+# Or compare with rembg
+url_rembg = "http://localhost:8000/remove-background?method=rembg&model=isnet-general-use"
+response_rembg = requests.post(url_rembg, files=files)
+
+with open("result_rembg.png", "wb") as f:
+    f.write(response_rembg.content)
 ```
 
 ### Compare Models:
@@ -179,11 +191,13 @@ curl -X POST "http://localhost:8000/remove-background?method=withoutbg" \
   --output result_withoutbg.png
 ```
 
-**Which model to use?**
-- **isnet-general-use**: Best overall quality (default) - great for all types of images
-- **u2net_cloth_seg**: Specialized for clothing items (shirts, pants, dresses)
-- **silueta**: Fastest processing, good for simple backgrounds
-- **u2net**: Good general purpose, faster than ISNet
+**Which method to use?**
+- **WithoutBG** (default): Best overall quality for clothing - excellent edge detection and detail preservation
+- **Rembg models**: Alternative options with different performance characteristics
+  - `isnet-general-use`: High quality general purpose
+  - `u2net_cloth_seg`: Specialized for clothing segmentation
+  - `silueta`: Fastest processing, good for simple backgrounds
+  - `u2net`: Good general purpose, faster than ISNet
 
 ## iOS App Configuration
 
