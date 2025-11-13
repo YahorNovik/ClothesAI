@@ -159,7 +159,8 @@ class WardrobeManager: ObservableObject {
 
             // Add a subtle border
             UIColor.gray.setStroke()
-            context.stroke(rect, width: 2)
+            context.cgContext.setLineWidth(2)
+            context.stroke(rect)
         }
 
         return image.jpegData(compressionQuality: 0.8)
