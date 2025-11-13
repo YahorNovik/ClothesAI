@@ -32,7 +32,7 @@ except ImportError:
 
 # Try to import rembg, fall back gracefully if not available
 try:
-    from rembg import remove as rembg_remove
+    from rembg import remove as rembg_remove, new_session
     REMBG_AVAILABLE = True
     logger.info("Rembg loaded successfully")
 except ImportError:
@@ -67,8 +67,11 @@ def remove_bg_withoutbg(image: Image.Image) -> Image.Image:
 
 def remove_bg_rembg(image: Image.Image, model: str = "u2net") -> Image.Image:
     """Remove background using Rembg library with selectable models."""
+    # Create a session with the specified model
+    session = new_session(model)
+
     # Process with Rembg - it accepts PIL Image and returns RGBA
-    result_image = rembg_remove(image, model_name=model)
+    result_image = rembg_remove(image, session=session)
 
     # Create white background
     white_bg = Image.new('RGB', result_image.size, (255, 255, 255))
