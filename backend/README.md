@@ -40,20 +40,20 @@ Remove background from an image with customizable methods and models.
 - Body: `file` (image file)
 - Query params:
   - `method` (optional, default: "rembg") - Options: `rembg`, `withoutbg`, `fallback`
-  - `model` (optional, default: "u2net_cloth_seg") - Only for rembg method
+  - `model` (optional, default: "isnet-general-use") - Only for rembg method
   - `format` (optional, default: "png") - Options: `png`, `jpeg`
 
 **Available Rembg Models:**
-- `u2net_cloth_seg` - **Best for clothing** (default)
+- `isnet-general-use` - **High quality general purpose** (default)
+- `u2net_cloth_seg` - Best for clothing segmentation
 - `u2net` - General purpose
-- `isnet-general-use` - High quality general purpose
 - `silueta` - Fast & lightweight (43MB)
 
 **Example using curl:**
 
 ```bash
-# Using rembg with clothing-specific model (default)
-curl -X POST "http://localhost:8000/remove-background?method=rembg&model=u2net_cloth_seg" \
+# Using rembg with ISNet (default - high quality)
+curl -X POST "http://localhost:8000/remove-background?method=rembg&model=isnet-general-use" \
   -F "file=@/path/to/image.jpg" \
   --output result.png
 
@@ -150,8 +150,8 @@ curl -X POST "http://localhost:8000/remove-background" \
 ```python
 import requests
 
-# Using rembg with clothing-specific model (recommended for clothes)
-url = "http://localhost:8000/remove-background?method=rembg&model=u2net_cloth_seg"
+# Using rembg with ISNet (default - high quality)
+url = "http://localhost:8000/remove-background?method=rembg&model=isnet-general-use"
 files = {"file": open("shirt.jpg", "rb")}
 
 response = requests.post(url, files=files)
@@ -180,10 +180,10 @@ curl -X POST "http://localhost:8000/remove-background?method=withoutbg" \
 ```
 
 **Which model to use?**
-- **u2net_cloth_seg**: Best for clothing items (shirts, pants, dresses)
-- **isnet-general-use**: Best overall quality, but slower
+- **isnet-general-use**: Best overall quality (default) - great for all types of images
+- **u2net_cloth_seg**: Specialized for clothing items (shirts, pants, dresses)
 - **silueta**: Fastest processing, good for simple backgrounds
-- **u2net**: Good general purpose fallback
+- **u2net**: Good general purpose, faster than ISNet
 
 ## iOS App Configuration
 

@@ -41,9 +41,9 @@ except ImportError:
 
 # Available models for rembg
 REMBG_MODELS = {
-    "u2net": "General purpose (default)",
+    "isnet-general-use": "High quality general purpose (default)",
     "u2net_cloth_seg": "Clothing segmentation (best for clothes)",
-    "isnet-general-use": "High quality general purpose",
+    "u2net": "General purpose",
     "silueta": "Fast & lightweight (43MB)"
 }
 
@@ -118,7 +118,7 @@ async def root():
 async def remove_background_endpoint(
     file: UploadFile = File(...),
     method: str = "rembg",
-    model: str = "u2net_cloth_seg",
+    model: str = "isnet-general-use",
     format: str = "png"
 ):
     """
@@ -127,7 +127,7 @@ async def remove_background_endpoint(
     Args:
         file: Image file to process
         method: Background removal method (rembg, withoutbg, fallback), default: rembg
-        model: Model to use (only for rembg method), default: u2net_cloth_seg
+        model: Model to use (only for rembg method), default: isnet-general-use
         format: Output format (png or jpeg), default: png
 
     Returns:
@@ -196,7 +196,7 @@ async def health_check():
         },
         "rembg_models": REMBG_MODELS if REMBG_AVAILABLE else {},
         "default_method": "rembg" if REMBG_AVAILABLE else ("withoutbg" if WITHOUTBG_AVAILABLE else "fallback"),
-        "default_model": "u2net_cloth_seg"
+        "default_model": "isnet-general-use"
     }
 
 
