@@ -17,7 +17,11 @@ class BackgroundRemovalService {
     // For iOS Simulator: use "http://localhost:8000"
     // For Physical Device: use your Mac's IP, e.g., "http://192.168.1.100:8000"
     // To find your Mac's IP: Run 'ipconfig getifaddr en0' in Terminal
+    #if targetEnvironment(simulator)
     var apiBaseURL: String = "http://localhost:8000"
+    #else
+    var apiBaseURL: String = "http://21.0.0.160:8000"  // Your Mac's IP
+    #endif
 
     private init() {}
 
