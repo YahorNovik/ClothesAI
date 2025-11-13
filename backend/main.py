@@ -4,6 +4,7 @@ from fastapi.responses import StreamingResponse
 from PIL import Image
 import io
 import logging
+import base64
 from typing import Optional
 
 # Configure logging
@@ -177,6 +178,85 @@ async def remove_background_endpoint(
         logger.info(f"Successfully processed image: {file.filename}")
 
         return StreamingResponse(output, media_type=media_type)
+
+    except Exception as e:
+        logger.error(f"Error processing image: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
+
+
+@app.post("/remove-background-dual")
+async def remove_background_dual_endpoint(
+    file: UploadFile = File(...)
+):
+    """
+    Remove background using BOTH WithoutBG and Rembg ISNet.
+    Returns both results so user can choose their preferred one.
+
+    Args:
+        file: Image file to process
+
+    Returns:
+        JSON with both processed images as base64
+    """
+    try:
+        # Validate file type
+        if not file.content_type.startswith('image/'):
+            raise HTTPException(status_code=400, detail="File must be an image")
+
+        # Read image
+        contents = await file.read()
+        image = Image.open(io.BytesIO(contents))
+
+        logger.info(f"Processing image with DUAL methods: {file.filename}, size: {image.size}")
+
+        results = {}
+
+        # Process with WithoutBG
+        if WITHOUTBG_AVAILABLE:
+            try:
+                logger.info("Processing with WithoutBG...")
+                withoutbg_result = remove_bg_withoutbg(image)
+
+                # Convert to base64
+                buffer = io.BytesIO()
+                withoutbg_result.save(buffer, format='PNG')
+                buffer.seek(0)
+                results['withoutbg'] = base64.b64encode(buffer.read()).decode('utf-8')
+                logger.info("✓ WithoutBG completed")
+            except Exception as e:
+                logger.error(f"WithoutBG failed: {str(e)}")
+                results['withoutbg'] = None
+                results['withoutbg_error'] = str(e)
+        else:
+            results['withoutbg'] = None
+            results['withoutbg_error'] = "WithoutBG not available"
+
+        # Process with Rembg ISNet
+        if REMBG_AVAILABLE:
+            try:
+                logger.info("Processing with Rembg ISNet...")
+                rembg_result = remove_bg_rembg(image, model="isnet-general-use")
+
+                # Convert to base64
+                buffer = io.BytesIO()
+                rembg_result.save(buffer, format='PNG')
+                buffer.seek(0)
+                results['isnet'] = base64.b64encode(buffer.read()).decode('utf-8')
+                logger.info("✓ Rembg ISNet completed")
+            except Exception as e:
+                logger.error(f"Rembg ISNet failed: {str(e)}")
+                results['isnet'] = None
+                results['isnet_error'] = str(e)
+        else:
+            results['isnet'] = None
+            results['isnet_error'] = "Rembg not available"
+
+        logger.info(f"Successfully processed image with both methods")
+
+        return {
+            "success": True,
+            "results": results
+        }
 
     except Exception as e:
         logger.error(f"Error processing image: {str(e)}")

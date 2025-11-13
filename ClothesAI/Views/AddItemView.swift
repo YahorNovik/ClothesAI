@@ -8,10 +8,13 @@ struct AddItemView: View {
     @State private var selectedCategory: ClothingCategory = .tops
     @State private var capturedImage: UIImage?
     @State private var processedImage: UIImage?
+    @State private var withoutbgImage: UIImage?
+    @State private var isnetImage: UIImage?
     @State private var showingImagePicker = false
     @State private var showingCamera = false
     @State private var isProcessing = false
     @State private var showingSourceSelection = false
+    @State private var showingResultSelection = false
     @State private var processingError: String?
 
     var body: some View {
@@ -134,6 +137,16 @@ struct AddItemView: View {
                     processImage(image)
                 }
             }
+            .sheet(isPresented: $showingResultSelection) {
+                ResultSelectionView(
+                    withoutbgImage: withoutbgImage,
+                    isnetImage: isnetImage,
+                    onSelect: { selectedImage in
+                        processedImage = selectedImage
+                        showingResultSelection = false
+                    }
+                )
+            }
         }
     }
 
@@ -145,14 +158,18 @@ struct AddItemView: View {
         isProcessing = true
         processingError = nil
 
-        BackgroundRemovalService.shared.removeBackground(from: image) { result in
+        BackgroundRemovalService.shared.removeBackgroundDual(from: image) { withoutbgResult, isnetResult in
             DispatchQueue.main.async {
                 isProcessing = false
-                if let processedImage = result {
-                    self.processedImage = processedImage
+                self.withoutbgImage = withoutbgResult
+                self.isnetImage = isnetResult
+
+                if withoutbgResult != nil || isnetResult != nil {
+                    // If we have at least one result, show selection UI
+                    self.showingResultSelection = true
                     self.processingError = nil
                 } else {
-                    // Fallback if background removal fails - use original image
+                    // Both failed - use original image
                     self.processedImage = image
                     self.processingError = "Server unavailable"
                     print("⚠️ Background removal failed - using original image")
@@ -180,6 +197,133 @@ struct AddItemView: View {
 
         wardrobeManager.addClothingItem(newItem)
         dismiss()
+    }
+}
+
+// MARK: - Result Selection View
+
+struct ResultSelectionView: View {
+    let withoutbgImage: UIImage?
+    let isnetImage: UIImage?
+    let onSelect: (UIImage) -> Void
+
+    @Environment(\.dismiss) var dismiss
+
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 20) {
+                Text("Choose Your Preferred Result")
+                    .font(.headline)
+                    .padding(.top)
+
+                Text("Compare both background removal methods and select the one you like best")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+
+                HStack(spacing: 15) {
+                    // WithoutBG Result
+                    if let withoutbgImage = withoutbgImage {
+                        VStack {
+                            Text("WithoutBG")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .foregroundColor(.blue)
+
+                            Image(uiImage: withoutbgImage)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(maxHeight: 400)
+                                .cornerRadius(12)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color.blue, lineWidth: 2)
+                                )
+
+                            Button {
+                                onSelect(withoutbgImage)
+                                dismiss()
+                            } label: {
+                                Text("Select")
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color.blue)
+                                    .cornerRadius(10)
+                            }
+                        }
+                    } else {
+                        VStack {
+                            Text("WithoutBG")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color(.systemGray6))
+                                .frame(maxHeight: 400)
+                                .overlay(
+                                    Text("Not Available")
+                                        .foregroundColor(.secondary)
+                                )
+                        }
+                    }
+
+                    // ISNet Result
+                    if let isnetImage = isnetImage {
+                        VStack {
+                            Text("ISNet")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .foregroundColor(.green)
+
+                            Image(uiImage: isnetImage)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(maxHeight: 400)
+                                .cornerRadius(12)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color.green, lineWidth: 2)
+                                )
+
+                            Button {
+                                onSelect(isnetImage)
+                                dismiss()
+                            } label: {
+                                Text("Select")
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color.green)
+                                    .cornerRadius(10)
+                            }
+                        }
+                    } else {
+                        VStack {
+                            Text("ISNet")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color(.systemGray6))
+                                .frame(maxHeight: 400)
+                                .overlay(
+                                    Text("Not Available")
+                                        .foregroundColor(.secondary)
+                                )
+                        }
+                    }
+                }
+                .padding(.horizontal)
+
+                Spacer()
+            }
+            .navigationTitle("Choose Result")
+            .navigationBarTitleDisplayMode(.inline)
+        }
     }
 }
 

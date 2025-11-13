@@ -35,6 +35,98 @@ class BackgroundRemovalService {
         }
     }
 
+    /// Removes background using BOTH WithoutBG and ISNet, returns both results
+    func removeBackgroundDual(from image: UIImage, completion: @escaping (UIImage?, UIImage?) -> Void) {
+        // Resize image if too large (max 2000px on longest side)
+        let resizedImage = resizeImageIfNeeded(image, maxDimension: 2000)
+
+        guard let imageData = resizedImage.jpegData(compressionQuality: 0.8) else {
+            print("❌ Failed to convert image to JPEG data")
+            completion(nil, nil)
+            return
+        }
+
+        print("📤 Image size: \(resizedImage.size.width)x\(resizedImage.size.height), data: \(imageData.count / 1024)KB")
+
+        let url = URL(string: "\(apiBaseURL)/remove-background-dual")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 120 // 2 minutes for dual processing
+
+        let boundary = UUID().uuidString
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+
+        var body = Data()
+
+        // Add image data
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"image.jpg\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+        body.append(imageData)
+        body.append("\r\n".data(using: .utf8)!)
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+
+        request.httpBody = body
+
+        print("📡 Sending image to API for dual processing: \(url)")
+        print("⏱️ Timeout set to 120 seconds")
+
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    print("❌ API Connection Error: \(error.localizedDescription)")
+                    completion(nil, nil)
+                    return
+                }
+
+                guard let data = data else {
+                    print("❌ No data received from API")
+                    completion(nil, nil)
+                    return
+                }
+
+                // Parse JSON response
+                do {
+                    let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+                    guard let results = json?["results"] as? [String: Any] else {
+                        print("❌ Invalid JSON response")
+                        completion(nil, nil)
+                        return
+                    }
+
+                    var withoutbgImage: UIImage?
+                    var isnetImage: UIImage?
+
+                    // Decode WithoutBG result
+                    if let withoutbgBase64 = results["withoutbg"] as? String,
+                       let withoutbgData = Data(base64Encoded: withoutbgBase64) {
+                        withoutbgImage = UIImage(data: withoutbgData)
+                        print("✅ WithoutBG result decoded")
+                    } else if let error = results["withoutbg_error"] as? String {
+                        print("⚠️ WithoutBG error: \(error)")
+                    }
+
+                    // Decode ISNet result
+                    if let isnetBase64 = results["isnet"] as? String,
+                       let isnetData = Data(base64Encoded: isnetBase64) {
+                        isnetImage = UIImage(data: isnetData)
+                        print("✅ ISNet result decoded")
+                    } else if let error = results["isnet_error"] as? String {
+                        print("⚠️ ISNet error: \(error)")
+                    }
+
+                    completion(withoutbgImage, isnetImage)
+
+                } catch {
+                    print("❌ JSON parsing error: \(error)")
+                    completion(nil, nil)
+                }
+            }
+        }
+
+        task.resume()
+    }
+
     // MARK: - Vision Framework Method
 
     private func removeBackgroundVision(from image: UIImage, completion: @escaping (UIImage?) -> Void) {
