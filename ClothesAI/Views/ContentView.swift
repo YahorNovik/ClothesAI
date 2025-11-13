@@ -11,10 +11,16 @@ struct ContentView: View {
                     Label("Wardrobe", systemImage: "tshirt.fill")
                 }
 
-            EnhancedOutfitBuilderView()
+            OutfitBuilderView()
                 .tabItem {
                     Label("Create Look", systemImage: "sparkles")
                 }
+
+            // TODO: Uncomment after adding EnhancedOutfitBuilderView.swift to Xcode project
+            // EnhancedOutfitBuilderView()
+            //     .tabItem {
+            //         Label("Create Look", systemImage: "sparkles")
+            //     }
 
             OutfitListView()
                 .tabItem {
