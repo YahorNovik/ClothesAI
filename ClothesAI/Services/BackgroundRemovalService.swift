@@ -143,15 +143,21 @@ class BackgroundRemovalService {
     // MARK: - API Method (WithoutBG)
 
     private func removeBackgroundAPI(from image: UIImage, completion: @escaping (UIImage?) -> Void) {
-        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
-            print("Failed to convert image to JPEG data")
+        // Resize image if too large (max 2000px on longest side)
+        let resizedImage = resizeImageIfNeeded(image, maxDimension: 2000)
+
+        guard let imageData = resizedImage.jpegData(compressionQuality: 0.8) else {
+            print("❌ Failed to convert image to JPEG data")
             completion(nil)
             return
         }
 
+        print("📤 Image size: \(resizedImage.size.width)x\(resizedImage.size.height), data: \(imageData.count / 1024)KB")
+
         let url = URL(string: "\(apiBaseURL)/remove-background")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
+        request.timeoutInterval = 60 // 60 second timeout
 
         let boundary = UUID().uuidString
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
@@ -168,7 +174,8 @@ class BackgroundRemovalService {
 
         request.httpBody = body
 
-        print("Sending image to API: \(url)")
+        print("📡 Sending image to API: \(url)")
+        print("⏱️ Timeout set to 60 seconds")
 
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
@@ -203,16 +210,44 @@ class BackgroundRemovalService {
                 }
 
                 guard let resultImage = UIImage(data: data) else {
-                    print("Failed to create image from API response")
+                    print("❌ Failed to create image from API response")
+                    print("   Response data size: \(data.count) bytes")
                     completion(nil)
                     return
                 }
 
-                print("Successfully received processed image from API")
+                print("✅ Successfully received processed image from API")
+                print("   Result size: \(resultImage.size.width)x\(resultImage.size.height)")
                 completion(resultImage)
             }
         }
 
         task.resume()
+    }
+
+    // MARK: - Helper Methods
+
+    private func resizeImageIfNeeded(_ image: UIImage, maxDimension: CGFloat) -> UIImage {
+        let size = image.size
+        let maxCurrentDimension = max(size.width, size.height)
+
+        // If image is already smaller than max, return as is
+        if maxCurrentDimension <= maxDimension {
+            return image
+        }
+
+        // Calculate new size maintaining aspect ratio
+        let scale = maxDimension / maxCurrentDimension
+        let newSize = CGSize(width: size.width * scale, height: size.height * scale)
+
+        print("📏 Resizing image from \(size.width)x\(size.height) to \(newSize.width)x\(newSize.height)")
+
+        // Resize image
+        UIGraphicsBeginImageContextWithOptions(newSize, false, 1.0)
+        image.draw(in: CGRect(origin: .zero, size: newSize))
+        let resizedImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+
+        return resizedImage ?? image
     }
 }
